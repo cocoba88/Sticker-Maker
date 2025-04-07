@@ -1,35 +1,39 @@
-name: Build and Upload Flutter APK
+name: Android CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   build:
-    name: Build and Upload APK
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.19.0' # Ganti dengan versi Flutter yang sesuai dengan proyek Anda
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4.7.0
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
 
-      - name: Install Dependencies
-        run: flutter pub get
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      working-directory: app
 
-      - name: Build Debug APK
-        run: flutter build apk --debug
+    - name: Build with Gradle
+      run: ./gradlew build
+      working-directory: app
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
+      working-directory: app
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: app-debug
+        path: app/app/build/outputs/apk/debug/app-debug.apk
